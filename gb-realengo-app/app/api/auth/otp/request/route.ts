@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateOtpToken } from '@/lib/auth'
-import { sendOtpEmail } from '@/lib/email'
+import { sendOtpEmail } from '@/lib/email-mock'
 import { z } from 'zod'
 
 const requestSchema = z.object({

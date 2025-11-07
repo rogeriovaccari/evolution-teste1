@@ -8,12 +8,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum CheckinStatus {
+  pending
+  approved
+  rejected
+}
+
 model User {
   id            String   @id @default(uuid())
   name          String
   email         String   @unique
   phone         String?
-  role          String   @default("student")
+  role          Role     @default(student)
   belt_level    String   @default("Branca (Adulto)")
   belt_core     String   @default("branca")
   is_kids       Boolean  @default(false)
@@ -52,7 +64,7 @@ model Checkin {
   user_id   String
   class_id  String
   ts        DateTime @default(now())
-  status    String   @default("pending")
+  status    CheckinStatus @default(pending)
   lat       Float?
   lng       Float?
   accuracy_m Float?

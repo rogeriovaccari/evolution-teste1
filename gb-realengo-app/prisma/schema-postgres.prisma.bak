@@ -1,11 +1,25 @@
-// Schema SQLite (sem Docker)
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum CheckinStatus {
+  pending
+  approved
+  rejected
 }
 
 model User {
@@ -13,14 +27,14 @@ model User {
   name          String
   email         String   @unique
   phone         String?
-  role          String   @default("student")
+  role          Role     @default(student)
   belt_level    String   @default("Branca (Adulto)")
   belt_core     String   @default("branca")
   is_kids       Boolean  @default(false)
   belt_started_at DateTime @default(now())
   date_of_birth DateTime?
   avatar_url    String?
-  avatar_meta   String?
+  avatar_meta   Json?
   medical_notes String?
   allergy_list  String?
   medication_notes String?
@@ -29,7 +43,7 @@ model User {
   emergency_consent       Boolean?
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
-  password_hash String?
+  password_hash String?   // For admin password mode
 
   Checkin       Checkin[]
 }
@@ -37,10 +51,10 @@ model User {
 model Class {
   id            String   @id @default(uuid())
   title         String
-  weekday       Int
-  start_time    String
+  weekday       Int      // 0=Dom..6=Sáb
+  start_time    String   // "HH:mm"
   end_time      String
-  location_name String
+  location_name String   // Tatame 1º Piso / 2º Piso
   require_emergency_contact Boolean @default(false)
   is_active     Boolean  @default(true)
 
@@ -52,7 +66,7 @@ model Checkin {
   user_id   String
   class_id  String
   ts        DateTime @default(now())
-  status    String   @default("pending")
+  status    CheckinStatus @default(pending)
   lat       Float?
   lng       Float?
   accuracy_m Float?
@@ -62,10 +76,14 @@ model Checkin {
 
   user   User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   class  Class @relation(fields: [class_id], references: [id])
+
+  @@index([user_id])
+  @@index([class_id])
+  @@index([ts])
 }
 
 model BeltRule {
-  belt          String @id
+  belt          String @id      // branca, azul, roxa, marrom, preta
   min_months    Int
   min_presences Int
   recommended   Int
@@ -75,7 +93,7 @@ model BeltRule {
 }
 
 model BeltRuleKids {
-  belt_level   String @id
+  belt_level   String @id       // ex: "Cinza/Branca (Criança)"
   min_months   Int?
   min_presences Int?
   recommended  Int?
@@ -89,6 +107,9 @@ model OtpToken {
   expires_at DateTime
   used       Boolean  @default(false)
   created_at DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
 }
 
 model ImportJob {
@@ -97,7 +118,7 @@ model ImportJob {
   total_rows  Int
   success_count Int
   error_count Int
-  status      String
+  status      String   // pending, processing, completed, failed
   started_at  DateTime @default(now())
   completed_at DateTime?
   
@@ -113,4 +134,6 @@ model ImportError {
   created_at DateTime @default(now())
 
   job        ImportJob @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@index([job_id])
 }

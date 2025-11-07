@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
@@ -109,7 +109,7 @@ async function main() {
       data: {
         name: 'Administrador',
         email: adminEmail,
-        role: Role.admin,
+        role: 'admin',
         belt_level: 'Preta (Adulto)',
         belt_core: 'preta',
         is_kids: false,

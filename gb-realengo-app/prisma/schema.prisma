@@ -1,0 +1,116 @@
+// Schema SQLite (sem Docker)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  role          String   @default("student")
+  belt_level    String   @default("Branca (Adulto)")
+  belt_core     String   @default("branca")
+  is_kids       Boolean  @default(false)
+  belt_started_at DateTime @default(now())
+  date_of_birth DateTime?
+  avatar_url    String?
+  avatar_meta   String?
+  medical_notes String?
+  allergy_list  String?
+  medication_notes String?
+  emergency_contact_name  String?
+  emergency_contact_phone String?
+  emergency_consent       Boolean?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  password_hash String?
+
+  Checkin       Checkin[]
+}
+
+model Class {
+  id            String   @id @default(uuid())
+  title         String
+  weekday       Int
+  start_time    String
+  end_time      String
+  location_name String
+  require_emergency_contact Boolean @default(false)
+  is_active     Boolean  @default(true)
+
+  Checkin       Checkin[]
+}
+
+model Checkin {
+  id        String   @id @default(uuid())
+  user_id   String
+  class_id  String
+  ts        DateTime @default(now())
+  status    String   @default("pending")
+  lat       Float?
+  lng       Float?
+  accuracy_m Float?
+  device_id String?
+  reason    String?
+  user_agent String?
+
+  user   User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  class  Class @relation(fields: [class_id], references: [id])
+}
+
+model BeltRule {
+  belt          String @id
+  min_months    Int
+  min_presences Int
+  recommended   Int
+  ideal         Int
+  per_year      Boolean @default(false)
+  strict_minimum Int?
+}
+
+model BeltRuleKids {
+  belt_level   String @id
+  min_months   Int?
+  min_presences Int?
+  recommended  Int?
+  ideal        Int?
+}
+
+model OtpToken {
+  id         String   @id @default(uuid())
+  email      String
+  token      String   @unique
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+}
+
+model ImportJob {
+  id          String   @id @default(uuid())
+  filename    String
+  total_rows  Int
+  success_count Int
+  error_count Int
+  status      String
+  started_at  DateTime @default(now())
+  completed_at DateTime?
+  
+  errors      ImportError[]
+}
+
+model ImportError {
+  id         String   @id @default(uuid())
+  job_id     String
+  row_number Int
+  field      String?
+  message    String
+  created_at DateTime @default(now())
+
+  job        ImportJob @relation(fields: [job_id], references: [id], onDelete: Cascade)
+}
